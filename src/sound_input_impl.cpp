@@ -119,7 +119,8 @@ void kvoice::sound_input_impl::process_input() {
         if (buffer_captured) {
             float mic_level = *std::max_element(capture_buffer.begin(), capture_buffer.end());
 
-            on_raw_voice_input(capture_buffer.data(), capture_buffer.size(), mic_level);
+            if (on_raw_voice_input)
+                on_raw_voice_input(capture_buffer.data(), capture_buffer.size(), mic_level);
 
             std::transform(capture_buffer.begin(), capture_buffer.end(), capture_buffer.begin(),
                            [gain = input_gain.load()](const float v) { return v * gain; });
@@ -145,7 +146,8 @@ void kvoice::sound_input_impl::process_input() {
                 int len = opus_encode_float(encoder, temporary_buffer.data(), kOpusFrameSize, packet.data(),
                                             kPacketMaxSize);
                 if (len < 0 || len > kPacketMaxSize) return;
-                on_voice_input(packet.data(), len);
+                if (on_voice_input)
+                    on_voice_input(packet.data(), len);
                 temporary_buffer.clear();
             }
             auto           remaining_data = capture_buffer.size();
@@ -155,7 +157,8 @@ void kvoice::sound_input_impl::process_input() {
                 int len = opus_encode_float(encoder, &capture_buffer[idx], kOpusFrameSize, packet.data(),
                                             kPacketMaxSize);
                 if (len < 0 || len > kPacketMaxSize) return;
-                on_voice_input(packet.data(), len);
+                if (on_voice_input)
+                    on_voice_input(packet.data(), len);
                 idx += kOpusFrameSize;
                 remaining_data -= kOpusFrameSize;
             }
