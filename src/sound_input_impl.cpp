@@ -43,7 +43,7 @@ kvoice::sound_input_impl::~sound_input_impl() {
 
 bool kvoice::sound_input_impl::enable_input() {
     if (!input_active) {
-        std::unique_lock lck(device_mutex);
+        std::lock_guard lck(device_mutex);
         if (input_device) {
             input_active = true;
             alcCaptureStart(input_device);
@@ -57,7 +57,7 @@ bool kvoice::sound_input_impl::enable_input() {
 
 bool kvoice::sound_input_impl::disable_input() {
     if (input_active) {
-        std::unique_lock lck(device_mutex);
+        std::lock_guard lck(device_mutex);
         input_active = false;
         if (input_device)
             alcCaptureStop(input_device);
@@ -71,7 +71,7 @@ void kvoice::sound_input_impl::set_mic_gain(float gain) {
 }
 
 void kvoice::sound_input_impl::change_device(std::string_view device_name) {
-    std::unique_lock lck(device_mutex);
+    std::lock_guard lck(device_mutex);
 
     alcCaptureCloseDevice(input_device);
 
@@ -103,7 +103,7 @@ void kvoice::sound_input_impl::process_input() {
         buffer_captured = false;
 
         {
-            std::unique_lock lck(device_mutex);
+            std::lock_guard lck(device_mutex);
             if (!input_device) {
                 std::this_thread::sleep_for(sleep_time);
                 continue;
