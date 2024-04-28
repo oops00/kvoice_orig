@@ -7,7 +7,6 @@
 
 #include <algorithm>
 #include <array>
-#include <boost/circular_buffer.hpp>
 
 #include "voice_exception.hpp"
 
