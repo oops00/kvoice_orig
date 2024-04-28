@@ -217,7 +217,7 @@ bool kvoice::stream_impl::update() {
 }
 
 void kvoice::stream_impl::setup_spatial() const {
-    if (this->is_spatial) {
+    if (!this->is_spatial) {
         vector zeros{ 0.f, 0.f, 0.f };
 
         alSourcefv(source, AL_POSITION, &zeros.x);
