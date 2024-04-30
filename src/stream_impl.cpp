@@ -225,7 +225,7 @@ void kvoice::stream_impl::setup_spatial() const {
         alSourcefv(source, AL_DIRECTION, &zeros.x);
         alSourcef(source, AL_MAX_DISTANCE, 100.f);
         alSourcef(source, AL_REFERENCE_DISTANCE, 100.f);
-        alSourcef(source, AL_ROLLOFF_FACTOR, 1.f);
+        alSourcef(source, AL_ROLLOFF_FACTOR, 0.f);
         alSourcei(source, AL_SOURCE_RELATIVE, AL_TRUE);
     } else {
         alSourcefv(source, AL_POSITION, &position.x);
