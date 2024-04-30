@@ -241,8 +241,8 @@ void kvoice::stream_impl::setup_spatial() const {
 void kvoice::stream_impl::update_source(std::uint32_t source_handle) const {
     alSourceRewind(source_handle);
 
-    alSourcei(source_handle, AL_LOOPING, false);
-    alSourcei(source_handle, AL_BUFFER, 0);
+    alSourcei(source_handle, AL_LOOPING, AL_FALSE);
+    alSourcei(source_handle, AL_BUFFER, AL_NONE);
 
     setup_spatial();
 
