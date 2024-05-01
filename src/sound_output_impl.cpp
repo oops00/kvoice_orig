@@ -10,8 +10,9 @@ kvoice::sound_output_impl::sound_output_impl(std::string_view device_name, std::
 
     std::mutex              condvar_mtx{};
     std::condition_variable output_initialization{};
+    std::exception_ptr      initialization_exception{nullptr};
     output_alive = true;
-    output_thread = std::thread([this, sample_rate, device_name, &output_initialization]() {
+    output_thread = std::thread([this, sample_rate, device_name, &output_initialization, &initialization_exception]() {
         int init_idx = -1;
         if (!device_name.empty()) {
             BASS_DEVICEINFO info;
@@ -27,7 +28,9 @@ kvoice::sound_output_impl::sound_output_impl(std::string_view device_name, std::
         }
         auto result = BASS_Init(init_idx, sample_rate, BASS_DEVICE_MONO | BASS_DEVICE_3D, nullptr, nullptr);
         if (!result) {
-            throw voice_exception::create_formatted("Couldn't open capture device {}", device_name);
+            initialization_exception = std::make_exception_ptr(voice_exception::create_formatted("Couldn't open capture device {}", device_name));
+            output_initialization.notify_one();
+            return;
         }
 
         // dummy https request to init OpenSSL(not thread safe in basslib)
@@ -88,6 +91,9 @@ kvoice::sound_output_impl::sound_output_impl(std::string_view device_name, std::
 
     std::unique_lock lock{ condvar_mtx };
     output_initialization.wait(lock);
+    if (initialization_exception != nullptr) {
+        std::rethrow_exception(initialization_exception);
+    }
 }
 
 kvoice::sound_output_impl::~sound_output_impl() {
