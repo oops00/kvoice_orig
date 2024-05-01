@@ -138,7 +138,10 @@ void kvoice::stream_impl::set_url(std::string_view url) {
                                          nullptr);
 
     BASS_ChannelSetSync(stream_handle, BASS_SYNC_END, 0, [](HSYNC handle, DWORD channel, DWORD data, void *user) {
-        reinterpret_cast<stream_impl*>(user)->on_end_cb();
+        auto ptr = reinterpret_cast<stream_impl*>(user);
+        if (ptr->on_end_cb) {
+            ptr->on_end_cb();
+        }
     }, this);
 
     BASS_ChannelPlay(stream_handle, false);
