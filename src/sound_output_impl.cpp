@@ -73,15 +73,26 @@ kvoice::sound_output_impl::sound_output_impl(std::string_view device_name, std::
                 BASS_SetDevice(-1);
                 device_need_update.store(false);
             }
-            requests_queue.consume_all([this](const request_stream_message& msg) {
-                if (msg.params.has_value()) {
-                    auto& params = *msg.params;
-                    msg.on_creation_callback(std::make_unique<stream_impl>(this, params.url, params.file_offset, this->sampling_rate));
+            {
+                while (true) {
+                    auto msg_ = requests_queue.front();
+                    if (msg_ == nullptr)
+                      break;
+
+                    const auto& msg = *msg_;
+                    {
+                        if (msg.params.has_value()) {
+                            auto& params = *msg.params;
+                            msg.on_creation_callback(std::make_unique<stream_impl>(this, params.url, params.file_offset, this->sampling_rate));
+                        }
+                        else {
+                            msg.on_creation_callback(std::make_unique<stream_impl>(this, this->sampling_rate));
+                        }
+                    }
+
+                    requests_queue.pop();
                 }
-                else {
-                    msg.on_creation_callback(std::make_unique<stream_impl>(this, this->sampling_rate));
-                }
-            });
+            }
 
             std::this_thread::sleep_for(std::chrono::milliseconds(16));
         }

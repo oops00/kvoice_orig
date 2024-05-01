@@ -1,5 +1,5 @@
 #pragma once
-#include <boost/lockfree/spsc_queue.hpp>
+#include <rigtorp/SPSCQueue.h>
 
 #include "bass/bass.h"
 #include <variant>
@@ -86,7 +86,7 @@ public:
 
     ktsignal::ktsignal<void()> drop_source_signal;
 private:
-    boost::lockfree::spsc_queue<request_stream_message> requests_queue;
+    rigtorp::SPSCQueue<request_stream_message>         requests_queue;
     std::atomic_bool                                   output_alive{ false };
     std::thread                                        output_thread{};
 
