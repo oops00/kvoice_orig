@@ -1,6 +1,5 @@
 #pragma once
 #include <boost/lockfree/spsc_queue.hpp>
-#include <boost/thread/concurrent_queues/sync_queue.hpp>
 
 #include "bass/bass.h"
 #include <variant>
