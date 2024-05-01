@@ -27,6 +27,10 @@ kvoice::sound_output_impl::sound_output_impl(std::string_view device_name, std::
 
         }
         auto result = BASS_Init(init_idx, sample_rate, BASS_DEVICE_MONO | BASS_DEVICE_3D, nullptr, nullptr);
+        if (!result && BASS_ErrorGetCode() == BASS_ERROR_ALREADY) {
+            result = BASS_Init(init_idx == -1 ? BASS_GetDevice() : init_idx, sample_rate, BASS_DEVICE_MONO | BASS_DEVICE_3D | BASS_DEVICE_REINIT, nullptr, nullptr);
+        }
+
         if (!result) {
             initialization_exception = std::make_exception_ptr(voice_exception::create_formatted("Couldn't open capture device {}", device_name));
             output_initialization.notify_one();
