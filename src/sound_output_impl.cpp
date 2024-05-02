@@ -37,6 +37,8 @@ kvoice::sound_output_impl::sound_output_impl(std::string_view device_name, std::
             return;
         }
 
+        auto real_output_device = BASS_GetDevice();
+
         // dummy https request to init OpenSSL(not thread safe in basslib)
         auto temp_handle = BASS_StreamCreateURL("https://www.google.com", 0, 0, NULL, 0);
 
@@ -63,18 +65,18 @@ kvoice::sound_output_impl::sound_output_impl(std::string_view device_name, std::
             }
             if (device_need_update.load()) {
                 BASS_DEVICEINFO info;
+                auto changed = false;
                 for (auto i = 1u; BASS_GetDeviceInfo(i, &info); i++) {
                     if (info.flags & BASS_DEVICE_ENABLED) {
                         if (this->device_name == info.name) {
-                            if (BASS_SetDevice(i)) {
-                                
-                            } else {
-                                BASS_SetDevice(-1);
-                            }
+                            changed = BASS_SetDevice(i);
+                            break;
                         }
                     }
                 }
-                BASS_SetDevice(-1);
+                if (!changed) {
+                  BASS_SetDevice(real_output_device);
+                }
                 device_need_update.store(false);
             }
             {
