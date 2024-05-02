@@ -87,7 +87,7 @@ kvoice::sound_output_impl::sound_output_impl(std::string_view device_name, std::
 
                     const auto& msg = *msg_;
                     {
-                        std::variant<std::exception, std::unique_ptr<stream>> stream;
+                        std::variant<std::exception_ptr, std::unique_ptr<stream>> stream;
                         try {
                             if (msg.params.has_value()) {
                                 auto& params = *msg.params;
@@ -96,8 +96,8 @@ kvoice::sound_output_impl::sound_output_impl(std::string_view device_name, std::
                             else {
                                 stream = std::make_unique<stream_impl>(this, this->sampling_rate);
                             }
-                        } catch (const std::exception& exc) {
-                            stream = exc;
+                        } catch (...) {
+                            stream = std::current_exception();
                         }
                         msg.on_creation_callback(std::move(stream));
                     }
