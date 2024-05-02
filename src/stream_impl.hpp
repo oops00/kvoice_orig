@@ -85,7 +85,6 @@ private:
     OpusDecoder*       decoder{ nullptr };
     sound_output_impl* output_impl{ nullptr };
 
-    bool playing{ false };
     bool is_spatial{ true };
 
     kvoice::on_stream_end_cb on_end_cb;

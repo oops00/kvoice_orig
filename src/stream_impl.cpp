@@ -125,7 +125,7 @@ void  kvoice::stream_impl::set_granularity(std::uint32_t granularity) {
 }
 
 bool kvoice::stream_impl::is_playing() {
-    return playing;
+    return BASS_ChannelIsActive(stream_handle) == BASS_ACTIVE_PLAYING;
 }
 
 void kvoice::stream_impl::update() {
