@@ -153,7 +153,7 @@ void kvoice::sound_output_impl::change_device(std::string_view device_name) {
 }
 
 void kvoice::sound_output_impl::create_stream(on_create_callback cb) {
-    requests_queue.push(request_stream_message{std::nullopt, cb});
+    requests_queue.push(request_stream_message{std::nullopt, std::move(cb)});
 }
 
 void kvoice::sound_output_impl::create_stream(on_create_callback cb, 
