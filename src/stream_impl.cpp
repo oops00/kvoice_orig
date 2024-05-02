@@ -7,8 +7,9 @@ kvoice::stream_impl::stream_impl(sound_output_impl* output, std::string_view url
     : sample_rate(sample_rate),
       output_impl(output) {
     stream_handle = BASS_StreamCreateURL(url.data(), 0, BASS_SAMPLE_MONO | BASS_SAMPLE_3D, nullptr, nullptr);
-
-    auto err = BASS_ErrorGetCode();
+    if (!stream_handle)
+        throw voice_exception::create_formatted(
+            "Failed to create online stream (errc = {})", BASS_ErrorGetCode());
 
     BASS_ChannelSetSync(stream_handle, BASS_SYNC_END, 0, [](HSYNC handle, DWORD channel, DWORD data, void *user) {
         auto ptr = reinterpret_cast<stream_impl*>(user);
@@ -32,6 +33,10 @@ kvoice::stream_impl::stream_impl(sound_output_impl* output, std::int32_t sample_
     : sample_rate(sample_rate),
       output_impl(output) {
     stream_handle = BASS_StreamCreate(sample_rate, 1, BASS_SAMPLE_FLOAT | BASS_SAMPLE_3D, &bass_cb, this);
+    if (!stream_handle)
+        throw voice_exception::create_formatted(
+            "Failed to create local stream (errc = {})", BASS_ErrorGetCode()); 
+
     type = stream_type::kLocalDataStream;
     int opus_err;
     decoder = opus_decoder_create(sample_rate, 1, &opus_err);
