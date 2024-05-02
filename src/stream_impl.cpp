@@ -165,7 +165,7 @@ void kvoice::stream_impl::mute_stream() {
 }
 
 void kvoice::stream_impl::unmute_stream() {
-    BASS_ChannelSetAttribute(stream_handle, BASS_ATTRIB_VOL, 1.0f);
+    BASS_ChannelSetAttribute(stream_handle, BASS_ATTRIB_VOL, output_gain);
 }
 
 DWORD kvoice::stream_impl::process_output(void* buffer, DWORD length) {
