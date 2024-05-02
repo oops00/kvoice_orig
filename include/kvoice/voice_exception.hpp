@@ -1,23 +1,16 @@
 #pragma once
-#include <stdexcept>
+#include <exception>
 #include <string>
 #include <format>
 
 namespace kvoice {
-class voice_exception final : virtual public std::exception {
-    std::string error_msg;
-
+class voice_exception : public std::exception {
 public:
     template <typename... Ts>
-    static voice_exception create_formatted(std::string_view fmt, Ts&&...args);
+    static voice_exception create_formatted(const std::string &fmt, Ts&&...args);
 
-    explicit voice_exception(std::string msg)
-        : error_msg(std::move(msg)) {
-    }
-
-    ~voice_exception() override = default;
-
-    [[nodiscard]] const char* what() const override { return error_msg.c_str(); }
+    explicit voice_exception(const std::string &msg)
+        : std::exception(msg.c_str()) {}
 };
 
 /**
@@ -28,7 +21,7 @@ public:
  * @return new @p voice_exception object
  */
 template <typename ...Ts>
-inline voice_exception voice_exception::create_formatted(std::string_view fmt, Ts&& ...args) {
+inline voice_exception voice_exception::create_formatted(const std::string &fmt, Ts&& ...args) {
     return voice_exception{ std::vformat(fmt, std::make_format_args(std::forward<Ts>(args)...)) };
 }
 
