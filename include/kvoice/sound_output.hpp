@@ -2,10 +2,12 @@
 #include "kv_vector.hpp"
 #include <string_view>
 #include <memory>
+#include <variant>
+#include <exception>
 #include "stream.hpp"
 
 namespace kvoice {
-using on_create_callback = std::function<void(std::unique_ptr<stream>)>;
+using on_create_callback = std::function<void(std::variant<std::exception, std::unique_ptr<stream>>)>;
 class sound_output {
 public:
     /**
