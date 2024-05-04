@@ -42,7 +42,7 @@ kvoice::sound_input_impl::sound_input_impl(std::string_view device_name, std::in
 
     if (!record_handle) throw voice_exception::create_formatted("Couldn't start capture on device {}", device_name);
 
-    BASS_ChannelSetAttribute(record_handle, BASS_ATTRIB_GRANULE, frames_per_buffer);
+    BASS_ChannelSetAttribute(record_handle, BASS_ATTRIB_GRANULE, static_cast<float>(frames_per_buffer));
 
     int opus_err;
     encoder = opus_encoder_create(sample_rate, 1, OPUS_APPLICATION_VOIP, &opus_err);
@@ -115,7 +115,7 @@ void kvoice::sound_input_impl::change_device(std::string_view device_name) {
 
     if (!record_handle) throw voice_exception::create_formatted("Couldn't start capture on device {}", device_name);
 
-    BASS_ChannelSetAttribute(record_handle, BASS_ATTRIB_GRANULE, frames_per_buffer_);
+    BASS_ChannelSetAttribute(record_handle, BASS_ATTRIB_GRANULE, static_cast<float>(frames_per_buffer_));
 }
 
 void kvoice::sound_input_impl::set_input_callback(std::function<on_voice_input_t> cb) {
