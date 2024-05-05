@@ -5,7 +5,6 @@
 #include <variant>
 #include <optional>
 #include "sound_output.hpp"
-#include "ktsignal/ktsignal.hpp"
 
 namespace kvoice {
 class sound_output_impl : public sound_output {
@@ -84,7 +83,6 @@ public:
     void     create_stream(on_create_callback cb) override;
     void     create_stream(on_create_callback cb, std::string_view url, std::uint32_t file_offset) override;
 
-    ktsignal::ktsignal<void()> drop_source_signal;
 private:
     rigtorp::SPSCQueue<request_stream_message>         requests_queue;
     std::atomic_bool                                   output_alive{ false };
