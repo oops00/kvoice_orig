@@ -22,22 +22,6 @@
 
 namespace kvoice {
 /**
- * @brief for internal usage
- * @details constructs a new view to string at current enumerator pos and increments enumerator by its size
- * useful for splitting OpenAL device list into strings
- * @param enumerator strings split with two \0
- * @return view to a string at current enumerator pos
- */
-inline std::string_view get_next_str(const char*& enumerator) {
-    if (enumerator && *enumerator != '\0') {
-        std::string_view res{ enumerator };
-        enumerator += res.size() + 1;
-        return res;
-    }
-    return "";
-}
-
-/**
  * @brief transforms internal OpenAL device list, and returns it
  * @return list of OpenAL input devices
  */
