@@ -42,6 +42,9 @@ private:
     std::function<on_voice_input_t>   on_voice_input{};
     std::function<on_voice_raw_input> on_raw_voice_input{};
 
+    HFX input_volume_fx{ NULL };
+    float input_volume{ 1.f };
+
     bool input_active{ false };
     bool rnnoise_active{ false };
 

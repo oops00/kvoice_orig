@@ -36,7 +36,7 @@ public:
     virtual bool disable_input() = 0;
     /**
      * @brief sets input gain
-     * @param gain float value from 0.0 to 1.0
+     * @param gain float value from 0.0 to 1.0. above 1.0 = amplification
      */
     virtual void set_mic_gain(float gain) = 0;
     /**
