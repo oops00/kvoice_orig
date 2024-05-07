@@ -41,10 +41,10 @@ public:
     virtual void set_mic_gain(float gain) = 0;
     /**
      * @brief changes input device immediately
-     * @param device_name new device name
+     * @param device_guid new device guid
      * @throws voice_exception if device couldn't be open
      */
-    virtual void change_device(std::string_view device_name) = 0;
+    virtual void change_device(std::string_view device_guid) = 0;
     /**
      * @brief sets input callback(called after applying gain and noise suppression)
      * @param cb user callback

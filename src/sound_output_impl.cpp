@@ -4,7 +4,7 @@
 
 #include "stream_impl.hpp"
 
-kvoice::sound_output_impl::sound_output_impl(std::string_view device_name, std::uint32_t sample_rate)
+kvoice::sound_output_impl::sound_output_impl(std::string_view device_guid, std::uint32_t sample_rate)
     : sampling_rate(sample_rate), requests_queue(16) {
     using namespace std::string_literals;
 
@@ -12,13 +12,13 @@ kvoice::sound_output_impl::sound_output_impl(std::string_view device_name, std::
     std::condition_variable output_initialization{};
     std::exception_ptr      initialization_exception{nullptr};
     output_alive = true;
-    output_thread = std::thread([this, sample_rate, device_name, &output_initialization, &initialization_exception]() {
+    output_thread = std::thread([this, sample_rate, device_guid, &output_initialization, &initialization_exception]() {
         int init_idx = -1;
-        if (!device_name.empty()) {
+        if (!device_guid.empty()) {
             BASS_DEVICEINFO info;
             for (auto i = 1; BASS_GetDeviceInfo(i, &info); i++) {
                 if (info.flags & BASS_DEVICE_ENABLED) {
-                    if (device_name == info.name) {
+                    if (device_guid == info.driver) {
                         init_idx = i;
                         break;
                     }
@@ -32,7 +32,7 @@ kvoice::sound_output_impl::sound_output_impl(std::string_view device_name, std::
         }
 
         if (!result) {
-            initialization_exception = std::make_exception_ptr(voice_exception::create_formatted("Couldn't open capture device {}", device_name));
+            initialization_exception = std::make_exception_ptr(voice_exception::create_formatted("Couldn't open capture device {}", device_guid));
             output_initialization.notify_one();
             return;
         }
@@ -68,7 +68,7 @@ kvoice::sound_output_impl::sound_output_impl(std::string_view device_name, std::
                 auto changed = false;
                 for (auto i = 1u; BASS_GetDeviceInfo(i, &info); i++) {
                     if (info.flags & BASS_DEVICE_ENABLED) {
-                        if (this->device_name == info.name) {
+                        if (this->device_guid == info.driver) {
                             changed = BASS_SetDevice(i);
                             break;
                         }
@@ -148,9 +148,9 @@ void kvoice::sound_output_impl::set_gain(float gain) noexcept {
     output_gain.store(gain);
 }
 
-void kvoice::sound_output_impl::change_device(std::string_view device_name) {
+void kvoice::sound_output_impl::change_device(std::string_view device_guid) {
     if (device_need_update.load()) return;
-    this->device_name = device_name;
+    this->device_guid = device_guid;
     device_need_update.store(true);
 }
 

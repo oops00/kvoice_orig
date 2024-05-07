@@ -28,11 +28,11 @@ class sound_output_impl : public sound_output {
 public:
     /**
      * @brief Constructor
-     * @param device_name Output device name in UTF-8(empty for default)
+     * @param device_guid Output device guid (empty for default)
      * @param sample_rate Output device sampling rate
      * @param src_count Number of max sources
      */
-    sound_output_impl(std::string_view device_name, std::uint32_t sample_rate);
+    sound_output_impl(std::string_view device_guid, std::uint32_t sample_rate);
     ~sound_output_impl() override;
 
     /**
@@ -73,9 +73,9 @@ public:
 
     /**
      * @brief changes output device
-     * @param device_name name of new output device
+     * @param device_guid guid of new output device
      */
-    void change_device(std::string_view device_name) override;
+    void change_device(std::string_view device_guid) override;
 
     void                        set_buffering_time(std::uint32_t time_ms) override { buffering_time = time_ms; }
     [[nodiscard]] std::uint32_t get_buffering_time() const { return buffering_time; }
@@ -96,7 +96,7 @@ private:
     vector     listener_up{ 0.f, 0.f, 0.f };
 
     std::atomic_bool device_need_update;
-    std::string device_name;
+    std::string device_guid;
 
     std::atomic<float> output_gain{ 1.f };
 

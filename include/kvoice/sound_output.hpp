@@ -53,10 +53,10 @@ public:
 
     /**
      * @brief changes output device
-     * @param device_name name of new output device
+     * @param device_guid guid of new output device
      * @throws voice_exception if device couldn't be open
      */
-    virtual void change_device(std::string_view device_name) = 0;
+    virtual void change_device(std::string_view device_guid) = 0;
 
     /**
      * @brief sets output buffering time
