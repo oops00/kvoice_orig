@@ -126,6 +126,8 @@ void kvoice::sound_input_impl::change_device(std::string_view device_guid) {
     input_volume_fx = BASS_ChannelSetFX(record_handle, BASS_FX_VOLUME, 0);
 
     set_mic_gain(input_volume);
+
+    if (!input_active) BASS_ChannelPause(record_handle);
 }
 
 void kvoice::sound_input_impl::set_input_callback(std::function<on_voice_input_t> cb) {
