@@ -24,9 +24,13 @@ kvoice::stream_impl::stream_impl(sound_output_impl* output, std::string_view url
     decoder = nullptr;
 
     auto file_offset_bytes = BASS_ChannelSeconds2Bytes(stream_handle, file_offset);
-    BASS_ChannelPlay(stream_handle, false);
-    BASS_ChannelSetPosition(stream_handle, file_offset_bytes, BASS_POS_BYTE | BASS_POS_DECODETO);
-    BASS_ChannelSetPosition(stream_handle, file_offset_bytes, BASS_POS_BYTE);
+    while (true) {
+        const auto len = BASS_StreamGetFilePosition(stream_handle, BASS_FILEPOS_END); // file/buffer length
+        if (file_offset_bytes > len) return; // nothing to play, well
+        BASS_ChannelSetPosition(stream_handle, file_offset_bytes, BASS_POS_BYTE | BASS_POS_DECODETO);
+        if (BASS_ChannelSetPosition(stream_handle, file_offset_bytes, BASS_POS_BYTE)) break;
+    }
+    BASS_ChannelPlay(stream_handle, FALSE);
 }
 
 kvoice::stream_impl::stream_impl(sound_output_impl* output, std::int32_t sample_rate)
