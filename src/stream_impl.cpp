@@ -5,8 +5,22 @@
 
 kvoice::stream_impl::stream_impl(sound_output_impl* output, std::string_view url, std::uint32_t file_offset, std::int32_t sample_rate)
     : sample_rate(sample_rate),
-      output_impl(output) {
-    stream_handle = BASS_StreamCreateURL(url.data(), 0, BASS_SAMPLE_MONO | BASS_SAMPLE_3D, nullptr, nullptr);
+      output_impl(output),
+      offset_to_set(file_offset) {
+    stream_handle = BASS_StreamCreateURL(url.data(), 0, BASS_SAMPLE_MONO | BASS_SAMPLE_3D, [](const void *buffer, DWORD length, void *user) {
+        auto ptr = reinterpret_cast<stream_impl*>(user);
+        auto &offset_to_set = ptr->offset_to_set;
+        auto &stream = ptr->stream_handle;
+        if (offset_to_set > 0 && stream != NULL) {
+            auto file_offset_bytes = BASS_ChannelSeconds2Bytes(stream, offset_to_set);
+            BASS_ChannelSetPosition(stream, file_offset_bytes, BASS_POS_BYTE | BASS_POS_DECODETO);
+            if (BASS_ChannelSetPosition(stream, file_offset_bytes, BASS_POS_BYTE)) {
+                BASS_ChannelPlay(stream, FALSE);
+                offset_to_set = 0;
+            }
+        }
+    }, this);
+
     if (!stream_handle)
         throw voice_exception::create_formatted(
             "Failed to create online stream (errc = {})", BASS_ErrorGetCode());
@@ -23,14 +37,9 @@ kvoice::stream_impl::stream_impl(sound_output_impl* output, std::string_view url
 
     decoder = nullptr;
 
-    auto file_offset_bytes = BASS_ChannelSeconds2Bytes(stream_handle, file_offset);
-    while (true) {
-        const auto len = BASS_StreamGetFilePosition(stream_handle, BASS_FILEPOS_END); // file/buffer length
-        if (file_offset_bytes > len) return; // nothing to play, well
-        BASS_ChannelSetPosition(stream_handle, file_offset_bytes, BASS_POS_BYTE | BASS_POS_DECODETO);
-        if (BASS_ChannelSetPosition(stream_handle, file_offset_bytes, BASS_POS_BYTE)) break;
+    if (file_offset == 0) {
+        BASS_ChannelPlay(stream_handle, FALSE);
     }
-    BASS_ChannelPlay(stream_handle, FALSE);
 }
 
 kvoice::stream_impl::stream_impl(sound_output_impl* output, std::int32_t sample_rate)
