@@ -3,8 +3,11 @@
 #include "sound_input.hpp"
 #include "sound_output.hpp"
 
+#include <cstdint>
 #include <vector>
 #include <string>
+#include <unordered_map>
+#include <memory>
 
 #ifdef _WIN32
 #   ifdef KVOICE_STATIC

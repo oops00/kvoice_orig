@@ -4,6 +4,10 @@
 #include "bass/bass.h"
 #include <variant>
 #include <optional>
+#include <thread>
+#include <mutex>
+#include <atomic>
+#include <cstdint>
 #include "sound_output.hpp"
 
 namespace kvoice {

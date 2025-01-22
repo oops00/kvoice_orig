@@ -4,6 +4,7 @@
 #include <array>
 #include <chrono>
 #include <queue>
+#include <string_view>
 
 #include "bass/bass.h"
 #include "ringbuffer.hpp"

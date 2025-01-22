@@ -4,6 +4,7 @@
 #include <memory>
 #include <variant>
 #include <exception>
+#include <functional>
 #include "stream.hpp"
 
 namespace kvoice {
