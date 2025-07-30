@@ -217,7 +217,7 @@ bool kvoice::stream_impl::update() {
 }
 
 void kvoice::stream_impl::setup_spatial() const {
-    if (this->is_spatial) {
+    if (!this->is_spatial) {
         vector zeros{ 0.f, 0.f, 0.f };
 
         alSourcefv(source, AL_POSITION, &zeros.x);
@@ -225,7 +225,7 @@ void kvoice::stream_impl::setup_spatial() const {
         alSourcefv(source, AL_DIRECTION, &zeros.x);
         alSourcef(source, AL_MAX_DISTANCE, 100.f);
         alSourcef(source, AL_REFERENCE_DISTANCE, 100.f);
-        alSourcef(source, AL_ROLLOFF_FACTOR, 1.f);
+        alSourcef(source, AL_ROLLOFF_FACTOR, 0.f);
         alSourcei(source, AL_SOURCE_RELATIVE, AL_TRUE);
     } else {
         alSourcefv(source, AL_POSITION, &position.x);
@@ -241,8 +241,8 @@ void kvoice::stream_impl::setup_spatial() const {
 void kvoice::stream_impl::update_source(std::uint32_t source_handle) const {
     alSourceRewind(source_handle);
 
-    alSourcei(source_handle, AL_LOOPING, false);
-    alSourcei(source_handle, AL_BUFFER, 0);
+    alSourcei(source_handle, AL_LOOPING, AL_FALSE);
+    alSourcei(source_handle, AL_BUFFER, AL_NONE);
 
     setup_spatial();
 

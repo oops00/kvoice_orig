@@ -70,8 +70,8 @@ void kvoice::sound_output_impl::set_my_orientation_front(vector front) noexcept 
 
 void kvoice::sound_output_impl::update_me() {
     float orientation[]{
-            listener_front.x, listener_front.y, listener_front.z,
-            listener_up.x, listener_up.y, listener_up.z
+            listener_front.x, listener_front.y, -listener_front.z,
+            listener_up.x, listener_up.y, -listener_up.z
     };
 
     alListenerfv(AL_POSITION, &listener_pos.x);

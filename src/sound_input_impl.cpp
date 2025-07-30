@@ -7,7 +7,6 @@
 
 #include <algorithm>
 #include <array>
-#include <boost/circular_buffer.hpp>
 
 #include "voice_exception.hpp"
 
@@ -44,7 +43,7 @@ kvoice::sound_input_impl::~sound_input_impl() {
 
 bool kvoice::sound_input_impl::enable_input() {
     if (!input_active) {
-        std::unique_lock lck(device_mutex);
+        std::lock_guard lck(device_mutex);
         if (input_device) {
             input_active = true;
             alcCaptureStart(input_device);
@@ -58,10 +57,10 @@ bool kvoice::sound_input_impl::enable_input() {
 
 bool kvoice::sound_input_impl::disable_input() {
     if (input_active) {
-        std::unique_lock lck(device_mutex);
+        std::lock_guard lck(device_mutex);
         input_active = false;
         if (input_device)
-            alcCaptureStart(input_device);
+            alcCaptureStop(input_device);
         return true;
     }
     return false;
@@ -72,7 +71,7 @@ void kvoice::sound_input_impl::set_mic_gain(float gain) {
 }
 
 void kvoice::sound_input_impl::change_device(std::string_view device_name) {
-    std::unique_lock lck(device_mutex);
+    std::lock_guard lck(device_mutex);
 
     alcCaptureCloseDevice(input_device);
 
@@ -104,7 +103,7 @@ void kvoice::sound_input_impl::process_input() {
         buffer_captured = false;
 
         {
-            std::unique_lock lck(device_mutex);
+            std::lock_guard lck(device_mutex);
             if (!input_device) {
                 std::this_thread::sleep_for(sleep_time);
                 continue;
@@ -120,7 +119,8 @@ void kvoice::sound_input_impl::process_input() {
         if (buffer_captured) {
             float mic_level = *std::max_element(capture_buffer.begin(), capture_buffer.end());
 
-            on_raw_voice_input(capture_buffer.data(), capture_buffer.size(), mic_level);
+            if (on_raw_voice_input)
+                on_raw_voice_input(capture_buffer.data(), capture_buffer.size(), mic_level);
 
             std::transform(capture_buffer.begin(), capture_buffer.end(), capture_buffer.begin(),
                            [gain = input_gain.load()](const float v) { return v * gain; });
@@ -146,7 +146,8 @@ void kvoice::sound_input_impl::process_input() {
                 int len = opus_encode_float(encoder, temporary_buffer.data(), kOpusFrameSize, packet.data(),
                                             kPacketMaxSize);
                 if (len < 0 || len > kPacketMaxSize) return;
-                on_voice_input(packet.data(), len);
+                if (on_voice_input)
+                    on_voice_input(packet.data(), len);
                 temporary_buffer.clear();
             }
             auto           remaining_data = capture_buffer.size();
@@ -156,7 +157,8 @@ void kvoice::sound_input_impl::process_input() {
                 int len = opus_encode_float(encoder, &capture_buffer[idx], kOpusFrameSize, packet.data(),
                                             kPacketMaxSize);
                 if (len < 0 || len > kPacketMaxSize) return;
-                on_voice_input(packet.data(), len);
+                if (on_voice_input)
+                    on_voice_input(packet.data(), len);
                 idx += kOpusFrameSize;
                 remaining_data -= kOpusFrameSize;
             }
