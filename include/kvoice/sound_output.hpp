@@ -2,10 +2,13 @@
 #include "kv_vector.hpp"
 #include <string_view>
 #include <memory>
+#include <variant>
+#include <exception>
+#include <functional>
 #include "stream.hpp"
 
 namespace kvoice {
-using on_create_callback = std::function<void(std::unique_ptr<stream>)>;
+using on_create_callback = std::function<void(std::variant<std::exception_ptr, std::unique_ptr<stream>>)>;
 class sound_output {
 public:
     /**
@@ -51,10 +54,10 @@ public:
 
     /**
      * @brief changes output device
-     * @param device_name name of new output device
+     * @param device_guid guid of new output device
      * @throws voice_exception if device couldn't be open
      */
-    virtual void change_device(std::string_view device_name) = 0;
+    virtual void change_device(std::string_view device_guid) = 0;
 
     /**
      * @brief sets output buffering time

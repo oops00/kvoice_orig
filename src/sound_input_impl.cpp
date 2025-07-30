@@ -9,13 +9,13 @@
 
 #include "voice_exception.hpp"
 
-kvoice::sound_input_impl::sound_input_impl(std::string_view device_name, std::int32_t        sample_rate,
+kvoice::sound_input_impl::sound_input_impl(std::string_view device_guid, std::int32_t        sample_rate,
                                            std::int32_t     frames_per_buffer, std::uint32_t bitrate)
     : sample_rate_(sample_rate),
       frames_per_buffer_(frames_per_buffer),
       encoder_buffer(kOpusFrameSize) {
     BOOL creation_status = false;
-    if (device_name.empty()) {
+    if (device_guid.empty()) {
         creation_status = BASS_RecordInit(-1); // default device
     } else {
         BASS_DEVICEINFO info;
@@ -27,7 +27,7 @@ kvoice::sound_input_impl::sound_input_impl(std::string_view device_name, std::in
                      type == BASS_DEVICE_TYPE_HEADSET ||
                      type == BASS_DEVICE_TYPE_LINE ||
                      type == BASS_DEVICE_TYPE_DIGITAL) &&
-                    device_name == info.name) {
+                    device_guid == info.driver) {
                     creation_status = BASS_RecordInit(i);
                 }
             }
@@ -36,13 +36,16 @@ kvoice::sound_input_impl::sound_input_impl(std::string_view device_name, std::in
 
     if (!creation_status && BASS_ErrorGetCode() != BASS_ERROR_ALREADY)
         throw voice_exception::create_formatted(
-            "Couldn't open capture device {}", device_name);
+            "Couldn't open capture device {}", device_guid);
 
     record_handle = BASS_RecordStart(sample_rate, 1, BASS_SAMPLE_FLOAT | BASS_RECORD_PAUSE, &bass_cb, this);
 
-    if (!record_handle) throw voice_exception::create_formatted("Couldn't start capture on device {}", device_name);
+    if (!record_handle) throw voice_exception::create_formatted("Couldn't start capture on device {}", device_guid);
 
-    BASS_ChannelSetAttribute(record_handle, BASS_ATTRIB_GRANULE, frames_per_buffer);
+    BASS_ChannelSetAttribute(record_handle, BASS_ATTRIB_GRANULE, static_cast<float>(frames_per_buffer));
+    input_volume_fx = BASS_ChannelSetFX(record_handle, BASS_FX_VOLUME, 0);
+
+    set_mic_gain(input_volume);
 
     int opus_err;
     encoder = opus_encoder_create(sample_rate, 1, OPUS_APPLICATION_VOIP, &opus_err);
@@ -84,13 +87,17 @@ bool kvoice::sound_input_impl::disable_input() {
 }
 
 void kvoice::sound_input_impl::set_mic_gain(float gain) {
-    BASS_ChannelSetAttribute(record_handle, BASS_ATTRIB_VOL, gain);
+    input_volume = gain;
+    BASS_FX_VOLUME_PARAM param;
+    param.fTarget = gain;
+    param.fTime = 0;
+    BASS_FXSetParameters(input_volume_fx, &param); // apply volume effect settings
 }
 
-void kvoice::sound_input_impl::change_device(std::string_view device_name) {
+void kvoice::sound_input_impl::change_device(std::string_view device_guid) {
     BASS_RecordFree();
     BOOL creation_status = false;
-    if (device_name.empty()) {
+    if (device_guid.empty()) {
         creation_status = BASS_RecordInit(-1); // default device
     } else {
         BASS_DEVICEINFO info;
@@ -102,20 +109,25 @@ void kvoice::sound_input_impl::change_device(std::string_view device_name) {
                      type == BASS_DEVICE_TYPE_HEADSET ||
                      type == BASS_DEVICE_TYPE_LINE ||
                      type == BASS_DEVICE_TYPE_DIGITAL) &&
-                    device_name == info.name) {
+                    device_guid == info.driver) {
                     creation_status = BASS_RecordInit(i);
                 }
             }
         }
     }
 
-    if (!creation_status) throw voice_exception::create_formatted("Couldn't open capture device {}", device_name);
+    if (!creation_status) throw voice_exception::create_formatted("Couldn't open capture device {}", device_guid);
 
     record_handle = BASS_RecordStart(sample_rate_, 1, BASS_SAMPLE_FLOAT, &bass_cb, this);
 
-    if (!record_handle) throw voice_exception::create_formatted("Couldn't start capture on device {}", device_name);
+    if (!record_handle) throw voice_exception::create_formatted("Couldn't start capture on device {}", device_guid);
 
-    BASS_ChannelSetAttribute(record_handle, BASS_ATTRIB_GRANULE, frames_per_buffer_);
+    BASS_ChannelSetAttribute(record_handle, BASS_ATTRIB_GRANULE, static_cast<float>(frames_per_buffer_));
+    input_volume_fx = BASS_ChannelSetFX(record_handle, BASS_FX_VOLUME, 0);
+
+    set_mic_gain(input_volume);
+
+    if (!input_active) BASS_ChannelPause(record_handle);
 }
 
 void kvoice::sound_input_impl::set_input_callback(std::function<on_voice_input_t> cb) {

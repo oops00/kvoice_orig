@@ -17,12 +17,12 @@ constexpr auto kPacketMaxSize = 32768;
 
 class sound_input_impl final : public sound_input {
 public:
-    sound_input_impl(std::string_view device_name, std::int32_t sample_rate, std::int32_t frames_per_buffer, std::uint32_t bitrate);
+    sound_input_impl(std::string_view device_guid, std::int32_t sample_rate, std::int32_t frames_per_buffer, std::uint32_t bitrate);
     ~sound_input_impl() override;
     bool enable_input() override;
     bool disable_input() override;
     void set_mic_gain(float gain) override;
-    void change_device(std::string_view device_name) override;
+    void change_device(std::string_view device_guid) override;
     void set_input_callback(std::function<on_voice_input_t> cb) override;
     void set_raw_input_callback(std::function<on_voice_raw_input> cb) override;
     void toggle_rnnoise(bool toogle) override;
@@ -41,6 +41,9 @@ private:
 
     std::function<on_voice_input_t>   on_voice_input{};
     std::function<on_voice_raw_input> on_raw_voice_input{};
+
+    HFX input_volume_fx{ NULL };
+    float input_volume{ 1.f };
 
     bool input_active{ false };
     bool rnnoise_active{ false };
